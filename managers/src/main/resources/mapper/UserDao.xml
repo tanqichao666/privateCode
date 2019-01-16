@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tan.managers.dao.UserDao" >
+	<resultMap type="UserInfo" id="userMap">
+		<result property="id" column="id" />
+		<result property="age" column="age" />
+		<result property="username" column="username" />
+		<result property="sex" column="sex" />
+		<collection property="roles" column="id" select="selectAllRoles"/>
+	</resultMap>
+	<resultMap type="com.tan.managers.model.Role" id="roleMap">
+		<result property="id" column="id" />
+		<result property="roleName" column="roleName" />
+		<collection property="functions" column="id" select="selectAllFunctions"/>
+	</resultMap>
+    <select id="findByName" resultMap="userMap">
+       SELECT * FROM userInfo where username = #{name}
+    </select>
+    <select id="selectAllRoles" parameterType="string" resultMap="roleMap">
+       SELECT r.id ,r.roleName FROM role r right join user_role ur  on ur.roleId=r.id and ur.userId = #{id}
+    </select>
+    <select id="selectAllFunctions" parameterType="string" resultType="com.tan.managers.model.Function"  >
+       SELECT f.id ,f.functionName FROM function f right join role_function rf  on rf.functionId=f.id and rf.roleId = #{id}
+    </select>
+    <insert id="insertUser" parameterType="UserInfo">
+    	insert into userInfo (id,username,age ,sex ,password) values (#{id},#{username},#{age},#{sex},#{password});
+    </insert>
+    <insert id="insertRole">
+    	insert into role (id,roleName) values 
+	    	<foreach collection="list" separator=",">
+	    		(#{id},#{roleName})
+	    	</foreach>
+    </insert>
+    <insert id="inserUserRole">
+    	insert into user_role (userId,roleId) values 
+	    	<foreach collection="roles" item="role" separator=",">
+	    		(#{userId},#{role.roleName})
+	    	</foreach>
+    </insert>
+    <select id="getOne" parameterType="string" resultMap="userMap">
+    	select * from userinfo where id =#{id}
+    </select>
+    <select id="queryByUserId" parameterType="string" resultMap="SysUserToken">
+    	select * from usertoken where userId =#{id}
+    </select>
+    <insert id="save" parameterType="SysUserToken">
+    	insert into usertoken (id,userId,token,expireTime,updateTime) values 
+	    	(id=#{token.id},userId=#{token.userId},token=#{token.token},expireTime=#{token.expireTime},updateTime=#{token.updateTime})
+    </insert>
+    <update id="update" parameterType="SysUserToken">
+    	update usertoken set 
+	    	token={token.token},expireTime=#{token.expireTime},updateTime=#{token.updateTime} where id={token.id} 
+    </update>
+</mapper>
